@@ -189,13 +189,22 @@ const roles = (...allowed) => (req, res, next) => {
   next();
 };
 
-app.get('/api/health', (req, res) => res.json({ success: true, status: 'ok', service: 'GovCareer API' }));
-app.get('/api/source/status', (req, res) => res.json({ success: true, source: sourceStatus }));
-app.post('/api/source/sync', auth, roles('ADMIN', 'HR'), async (req, res) => {
-  const source = await syncSarkariJobs();
-  res.json({ success: true, message: source.mode === 'live' ? 'Sarkari job source synced' : 'Using seeded Sarkari fallback data', source });
+app.get('/api', (req, res) => {
+  res.json({
+    success: true,
+    message: 'GovCareer API Running',
+    endpoints: {
+      health: '/api/health',
+      jobs: '/api/jobs',
+      auth: '/api/auth/login'
+    }
+  });
 });
 
+app.use((req, res) => res.status(404).json({
+  success: false,
+  message: 'API route not found'
+}));
 app.post('/api/auth/register', async (req, res) => {
   const { firstName, lastName, email, phone, password, role = 'STUDENT', state = 'Delhi' } = req.body;
   if (!email || !phone || !password) return res.status(400).json({ success: false, message: 'Email, mobile and password are required' });
@@ -354,10 +363,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Server error', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
 });
 
-server.listen(PORT, () => {
-  console.log(`GovCareer API running on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ GovCareer API running on port ${PORT}`);
 });
-
 syncSarkariJobs().then((source) => {
   console.log(`Job source mode: ${source.mode} (${source.imported} records)`);
 });
