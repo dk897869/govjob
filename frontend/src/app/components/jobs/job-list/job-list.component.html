@@ -1,0 +1,175 @@
+<div class="min-h-screen bg-gray-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Job Opportunities</h1>
+      <p class="text-gray-600 mt-2">Find your dream government job</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white rounded-xl shadow-md p-4 mb-8">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+          <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <input
+              type="text"
+              [(ngModel)]="filters.search"
+              (keyup.enter)="applyFilters()"
+              placeholder="Search by job title, company, or keywords"
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+        </div>
+        <button
+          (click)="applyFilters()"
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Search
+        </button>
+        <button
+          (click)="showFilters = !showFilters"
+          class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <i class="fas fa-filter mr-2"></i>
+          Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div *ngIf="showFilters" class="bg-white rounded-xl shadow-md p-6 mb-8 animate-fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+          <select [(ngModel)]="filters.location" class="w-full border border-gray-300 rounded-lg p-2">
+            <option *ngFor="let loc of locations" [value]="loc === 'All' ? '' : loc">{{ loc }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Job Type</label>
+          <select [(ngModel)]="filters.type" class="w-full border border-gray-300 rounded-lg p-2">
+            <option *ngFor="let type of jobTypes" [value]="type === 'All' ? '' : type">{{ type }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Experience</label>
+          <select [(ngModel)]="filters.experience" class="w-full border border-gray-300 rounded-lg p-2">
+            <option *ngFor="let exp of experienceLevels" [value]="exp === 'All' ? '' : exp">{{ exp }}</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button (click)="applyFilters()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Apply Filters
+          </button>
+          <button (click)="resetFilters()" class="w-full px-4 py-2 ml-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center items-center h-96">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Job Grid -->
+    <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let job of jobs" class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div class="p-6">
+          <!-- Header -->
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ job.title }}</h3>
+              <p class="text-gray-600 text-sm">
+                <i class="fas fa-building mr-1"></i> {{ job.company }}
+              </p>
+            </div>
+            <button (click)="toggleSaveJob(job._id)" class="text-gray-400 hover:text-red-500 transition-colors">
+              <i [class]="isJobSaved(job._id) ? 'fas fa-heart text-red-500' : 'far fa-heart'"></i>
+            </button>
+          </div>
+
+          <!-- Details -->
+          <div class="space-y-2 mb-4">
+            <p class="text-sm text-gray-600">
+              <i class="fas fa-map-marker-alt mr-2"></i> {{ job.location }}
+            </p>
+            <p class="text-sm text-gray-600">
+              <i class="fas fa-briefcase mr-2"></i> {{ job.experience }} years experience
+            </p>
+            <p class="text-sm text-gray-600">
+              <i class="fas fa-rupee-sign mr-2"></i> {{ job.salary?.min | number }} - {{ job.salary?.max | number }} / month
+            </p>
+          </div>
+
+          <!-- Tags -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span [class]="'px-2 py-1 text-xs rounded-full ' + getJobTypeColor(job.type)">
+              {{ job.type }}
+            </span>
+            <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
+              {{ job.department }}
+            </span>
+            <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+              {{ job.positions }} positions
+            </span>
+          </div>
+
+          <!-- Deadline -->
+          <div class="border-t pt-4 mb-4">
+            <p class="text-sm text-gray-500">
+              <i class="fas fa-clock mr-1"></i> Apply by: {{ job.lastDate | date:'MMM d, yyyy' }}
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3">
+            <a [routerLink]="['/jobs', job._id]" class="flex-1 text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              View Details
+            </a>
+            <a [routerLink]="['/apply', job._id]" class="flex-1 text-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium">
+              Apply Now
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results -->
+    <div *ngIf="!isLoading && jobs.length === 0" class="text-center py-16">
+      <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+      <h3 class="text-xl font-semibold text-gray-700 mb-2">No jobs found</h3>
+      <p class="text-gray-500">Try adjusting your search or filter criteria</p>
+      <button (click)="resetFilters()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        Clear Filters
+      </button>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="mt-8 flex justify-center">
+      <nav class="flex items-center space-x-2">
+        <button
+          (click)="onPageChange(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <span class="px-4 py-2 text-sm text-gray-700">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        
+        <button
+          (click)="onPageChange(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>

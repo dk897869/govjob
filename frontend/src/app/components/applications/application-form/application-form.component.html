@@ -1,0 +1,188 @@
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Apply for {{ job?.title }}</h1>
+      <p class="text-gray-600 mt-2">{{ job?.company }} • {{ job?.location }}</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="mb-8">
+      <div class="flex justify-between">
+        <div *ngFor="let step of [1, 2, 3]" class="flex-1 relative">
+          <div class="flex items-center">
+            <div class="flex-1" *ngIf="step > 1">
+              <div class="h-1 bg-gray-200" [class.bg-blue-600]="step <= currentStep"></div>
+            </div>
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold"
+              [class]="step <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'">
+              {{ step }}
+            </div>
+            <div class="flex-1" *ngIf="step < totalSteps">
+              <div class="h-1 bg-gray-200" [class.bg-blue-600]="step < currentStep"></div>
+            </div>
+          </div>
+          <div class="text-center mt-2 text-sm font-medium"
+            [class]="step <= currentStep ? 'text-blue-600' : 'text-gray-500'">
+            {{ step === 1 ? 'Personal Info' : step === 2 ? 'Professional Info' : 'Additional Info' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Step 1: Personal Information -->
+      <div *ngIf="currentStep === 1" class="bg-white rounded-xl shadow-md p-6 animate-fade-in">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Personal Information</h2>
+        <div formGroupName="personalInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+            <input type="text" formControlName="fullName" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+            <input type="email" formControlName="email" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+            <input type="tel" formControlName="phone" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Address *</label>
+            <textarea formControlName="address" rows="2" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
+            <input type="text" formControlName="city" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
+            <input type="text" formControlName="state" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Pincode *</label>
+            <input type="text" formControlName="pincode" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Professional Information -->
+      <div *ngIf="currentStep === 2" class="bg-white rounded-xl shadow-md p-6 animate-fade-in">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Professional Information</h2>
+        <div formGroupName="professionalInfo" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Years of Experience *</label>
+              <select formControlName="experience" class="w-full border border-gray-300 rounded-lg p-2">
+                <option value="">Select</option>
+                <option value="0">Fresher</option>
+                <option value="1">1 year</option>
+                <option value="2">2 years</option>
+                <option value="3">3 years</option>
+                <option value="4">4 years</option>
+                <option value="5">5+ years</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Current Company</label>
+              <input type="text" formControlName="currentCompany" class="w-full border border-gray-300 rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Current Salary (₹)</label>
+              <input type="number" formControlName="currentSalary" class="w-full border border-gray-300 rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Expected Salary (₹) *</label>
+              <input type="number" formControlName="expectedSalary" class="w-full border border-gray-300 rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Notice Period *</label>
+              <select formControlName="noticePeriod" class="w-full border border-gray-300 rounded-lg p-2">
+                <option value="">Select</option>
+                <option value="Immediate">Immediate</option>
+                <option value="15 days">15 days</option>
+                <option value="30 days">30 days</option>
+                <option value="45 days">45 days</option>
+                <option value="60 days">60 days</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Highest Education *</label>
+              <input type="text" formControlName="education" class="w-full border border-gray-300 rounded-lg p-2" placeholder="e.g., B.Tech in Computer Science">
+            </div>
+          </div>
+
+          <!-- Skills -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Skills *</label>
+            <div formArrayName="skills">
+              <div *ngFor="let skill of skills.controls; let i = index" class="flex gap-2 mb-2">
+                <input [formControlName]="i" type="text" class="flex-1 border border-gray-300 rounded-lg p-2" placeholder="e.g., JavaScript">
+                <button type="button" (click)="removeSkill(i)" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <button type="button" (click)="addSkill()" class="mt-2 text-blue-600 hover:text-blue-700">
+              <i class="fas fa-plus mr-1"></i> Add Skill
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Additional Information -->
+      <div *ngIf="currentStep === 3" class="bg-white rounded-xl shadow-md p-6 animate-fade-in">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Additional Information</h2>
+        <div formGroupName="additionalInfo" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Cover Letter *</label>
+            <textarea formControlName="coverLetter" rows="6" class="w-full border border-gray-300 rounded-lg p-2" 
+              placeholder="Why are you interested in this position? What makes you a good candidate?"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Resume/CV *</label>
+            <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" class="w-full">
+            <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 5MB)</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Portfolio URL</label>
+              <input type="url" formControlName="portfolio" class="w-full border border-gray-300 rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile</label>
+              <input type="url" formControlName="linkedin" class="w-full border border-gray-300 rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Profile</label>
+              <input type="url" formControlName="github" class="w-full border border-gray-300 rounded-lg p-2">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Information</label>
+            <textarea formControlName="additionalInfo" rows="3" class="w-full border border-gray-300 rounded-lg p-2"
+              placeholder="Any other information you'd like to share..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Navigation -->
+      <div class="flex justify-between">
+        <button type="button" (click)="previousStep()" *ngIf="currentStep > 1" 
+          class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          <i class="fas fa-arrow-left mr-2"></i> Previous
+        </button>
+        <button type="button" (click)="nextStep()" *ngIf="currentStep < totalSteps"
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ml-auto">
+          Next <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+        <button type="submit" *ngIf="currentStep === totalSteps" [disabled]="isSubmitting"
+          class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-colors ml-auto disabled:opacity-50">
+          <i class="fas fa-paper-plane mr-2"></i>
+          {{ isSubmitting ? 'Submitting...' : 'Submit Application' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

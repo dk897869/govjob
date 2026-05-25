@@ -1,0 +1,211 @@
+<main class="indeed-shell" [class.dark]="darkMode">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="wordmark" (click)="navigate('home')" aria-label="Home">govjobs</button>
+      <nav class="main-nav" [class.open]="mobileMenu">
+        <button class="active" (click)="navigate('home')">Home</button>
+        <button (click)="navigate('jobs')">Find jobs</button>
+        <button (click)="navigate('results')">Results</button>
+        <button (click)="navigate('admit-cards')">Admit cards</button>
+        <div class="dropdown">
+          <button>Resources</button>
+          <div class="dropdown-menu">
+            <button (click)="navigate('skill-test')">Online skill tests</button>
+            <button (click)="navigate('resume')">Resume builder</button>
+            <button (click)="navigate('notifications')">Notifications</button>
+            <button (click)="navigate('connections')">Connection requests</button>
+            <button (click)="navigate('chat')">HR chat</button>
+          </div>
+        </div>
+      </nav>
+      <div class="top-actions">
+        <button class="nav-icon" title="Saved jobs" (click)="navigate('student')">▮</button>
+        <button class="nav-icon" title="Messages" (click)="navigate('chat')">▱</button>
+        <button class="nav-icon" title="Notifications" (click)="navigate('notifications')">{{ notifications.length || 0 }}</button>
+        <div class="profile-wrap">
+          <button class="nav-icon" title="Account" (click)="profileMenu = !profileMenu">●</button>
+          <div class="profile-menu" *ngIf="profileMenu">
+            <strong>{{ user ? user.firstName + ' ' + user.lastName : 'Guest' }}</strong>
+            <button *ngIf="!user" (click)="navigate('login'); profileMenu = false">Sign in</button>
+            <button *ngIf="user" (click)="navigate(user.role === 'HR' ? 'hr' : user.role === 'ADMIN' ? 'admin' : 'student'); profileMenu = false">Dashboard</button>
+            <button *ngIf="user?.role === 'HR' || user?.role === 'ADMIN'" (click)="syncSource(); profileMenu = false">Sync Sarkari jobs</button>
+            <button *ngIf="user" (click)="logout(); profileMenu = false">Logout</button>
+          </div>
+        </div>
+        <span class="divider"></span>
+        <button class="post-link" (click)="navigate('hr')">Employers / Post Job</button>
+        <button class="nav-icon" (click)="darkMode = !darkMode">{{ darkMode ? 'L' : 'D' }}</button>
+        <button class="nav-icon mobile" (click)="mobileMenu = !mobileMenu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="security-strip">
+    <b>Watch out for suspicious messages</b>
+    <span>Apply only through official links and verify every government notification.</span>
+    <button (click)="message = ''">Learn more</button>
+  </section>
+
+  <section *ngIf="message" class="notice-wrap">
+    <div class="notice">{{ message }}</div>
+  </section>
+
+  <section *ngIf="page === 'home'" class="home-stage">
+    <div class="search-panel">
+      <div class="field">
+        <span>⌕</span>
+        <input [(ngModel)]="search" placeholder="Job title, keywords, or department" (keyup.enter)="navigate('jobs'); loadJobs()">
+      </div>
+      <div class="field">
+        <span>⌖</span>
+        <select [(ngModel)]="selectedState" (change)="loadJobs()">
+          <option *ngFor="let state of states">{{ state }}</option>
+        </select>
+      </div>
+      <button class="find-btn" (click)="navigate('jobs'); loadJobs()">Find jobs</button>
+    </div>
+    <div class="welcome-grid">
+      <div>
+        <h1>Welcome{{ user ? ', ' + user.firstName : '' }}</h1>
+        <h2>Jobs for you</h2>
+        <div class="home-jobs">
+          <button class="job-tile" *ngFor="let job of filteredJobs.slice(0, 3)" (click)="viewJob(job)">
+            <span class="pill" *ngIf="job.tags?.[0]">{{ job.tags?.[0] }}</span>
+            <strong>{{ job.title }}</strong>
+            <small>{{ job.department }}</small>
+            <small>{{ job.city }}, {{ job.state }}</small>
+            <b>{{ job.salary }}</b>
+          </button>
+        </div>
+      </div>
+      <aside class="source-card">
+        <span class="source-dot"></span>
+        <h3>Sarkari source feed</h3>
+        <p>Jobs are served through the backend API and synced from the configured Sarkari job source.</p>
+        <div><small>Mode</small><b>{{ source?.mode || 'seeded' }}</b></div>
+        <div><small>Records</small><b>{{ source?.imported || jobs.length }}</b></div>
+        <button class="outline-btn" (click)="navigate('jobs')">View all jobs</button>
+      </aside>
+    </div>
+  </section>
+
+  <section *ngIf="page === 'jobs'" class="jobs-page">
+    <div class="search-panel compact">
+      <div class="field"><span>⌕</span><input [(ngModel)]="search" placeholder="Job title, keywords, or department" (input)="loadJobs()"></div>
+      <div class="field"><span>⌖</span><select [(ngModel)]="selectedState" (change)="loadJobs()"><option *ngFor="let state of states">{{ state }}</option></select></div>
+      <button class="find-btn" (click)="loadJobs()">Find jobs</button>
+    </div>
+    <div class="source-line">
+      <span>{{ filteredJobs.length }} jobs</span>
+      <span>Source: {{ source?.mode || 'seeded' }} · {{ source?.sourceUrl || 'Sarkari job API' }}</span>
+      <button *ngIf="user?.role === 'HR' || user?.role === 'ADMIN'" (click)="syncSource()">Sync now</button>
+    </div>
+    <div class="indeed-layout">
+      <aside class="job-results">
+        <button class="result-card" *ngFor="let job of filteredJobs" [class.selected]="selectedJob?.id === job.id" (click)="selectedJob = job">
+          <div class="card-top">
+            <span class="pill" *ngFor="let tag of (job.tags || []).slice(0, 2)">{{ tag }}</span>
+            <span class="save-icon">▱</span>
+          </div>
+          <h3>{{ job.title }}</h3>
+          <p>{{ job.department }}</p>
+          <p>{{ job.city }}, {{ job.state }}</p>
+          <b>{{ job.salary }}</b>
+          <small>{{ job.totalPositions }} vacancies · Fee ₹{{ job.applicationFee }} · Exam {{ job.examStartDate | date:'mediumDate' }}</small>
+        </button>
+      </aside>
+      <article class="job-detail-pane" *ngIf="selectedJob">
+        <div class="detail-head">
+          <h2>{{ selectedJob.title }}</h2>
+          <a [href]="selectedJob.sourceUrl" target="_blank" rel="noopener">{{ selectedJob.department }}</a>
+          <p>{{ selectedJob.city }}, {{ selectedJob.state }}</p>
+          <p class="pay">{{ selectedJob.salary }}</p>
+          <div class="detail-actions">
+            <button class="find-btn" (click)="apply(selectedJob)">Apply on official site ↗</button>
+            <button class="square-btn">▱</button>
+            <button class="square-btn">☟</button>
+            <button class="square-btn">↥</button>
+          </div>
+        </div>
+        <div class="detail-body">
+          <h3>Job details</h3>
+          <p>Here is how the job details align with your profile.</p>
+          <div class="detail-row"><b>Pay</b><span>{{ selectedJob.salary }}</span></div>
+          <div class="detail-row"><b>Vacancies</b><span>{{ selectedJob.totalPositions }}</span></div>
+          <div class="detail-row"><b>Application fee</b><span>₹{{ selectedJob.applicationFee }}</span></div>
+          <div class="detail-row"><b>Exam date</b><span>{{ selectedJob.examStartDate | date:'mediumDate' }}</span></div>
+          <h3>Full job description</h3>
+          <p>{{ selectedJob.description }}</p>
+          <h3>Eligibility</h3>
+          <p>{{ selectedJob.eligibility }}</p>
+          <h3>Source</h3>
+          <p>{{ selectedJob.sourceName || 'Sarkari job source' }} · <a [href]="selectedJob.sourceUrl" target="_blank" rel="noopener">Open source</a></p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section *ngIf="page === 'login'" class="login-page">
+    <button class="login-logo" (click)="navigate('home')">govjobs</button>
+    <div class="login-card">
+      <h2>Ready to take the next step?</h2>
+      <p class="lead">Create an account or sign in.</p>
+      <p class="terms">By clicking any continue option below, you agree to the portal terms and official job verification policy.</p>
+      <button class="social google" (click)="socialLogin('google')"><span>G</span> Continue with Google</button>
+      <button class="social" (click)="socialLogin('linkedin')"><span>in</span> Continue with LinkedIn</button>
+      <button class="social" (click)="socialLogin('facebook')"><span>f</span> Continue with Facebook</button>
+      <div class="or"><span></span>or<span></span></div>
+      <label>Email address or mobile number *</label>
+      <input [(ngModel)]="login.identifier" placeholder="student@govjob.in or 9876543210">
+      <label>Password *</label>
+      <input [(ngModel)]="login.password" type="password" placeholder="Password@123">
+      <button class="continue-btn" [disabled]="loading" (click)="passwordLogin()">Continue →</button>
+      <div class="otp-box">
+        <input [(ngModel)]="login.phone" placeholder="Mobile OTP login">
+        <button (click)="sendOtp()">Send OTP</button>
+        <input [(ngModel)]="login.otp" placeholder="OTP 123456">
+        <button (click)="verifyOtp()">Verify</button>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="page === 'student' || page === 'teacher' || page === 'hr' || page === 'admin'" class="utility-page">
+    <h2>{{ page === 'student' ? 'Student Dashboard' : page === 'teacher' ? 'Teacher Dashboard' : page === 'hr' ? 'HR Dashboard' : 'Admin Panel' }}</h2>
+    <div class="stats-grid"><div class="stat" *ngFor="let stat of stats"><small>{{ stat.label }}</small><b>{{ stat.value }}</b></div></div>
+    <div class="utility-grid">
+      <article><h3>Recommended Sarkari jobs</h3><div class="mini-item" *ngFor="let job of recommendedJobs"><b>{{ job.title }}</b><span>{{ job.state }} · {{ job.salary }}</span></div></article>
+      <article><h3>Applications</h3><div class="mini-item" *ngFor="let app of applications"><b>{{ app.title }}</b><span>{{ app.applicationStatus }} · Fee {{ app.feeStatus }}</span></div><p *ngIf="!applications.length">No applications yet.</p></article>
+      <article *ngIf="page === 'hr' || page === 'admin'"><h3>Employer tools</h3><button class="find-btn" (click)="createJob()">Post sample job</button><button class="outline-btn" (click)="syncSource()">Sync Sarkari source</button></article>
+    </div>
+  </section>
+
+  <section *ngIf="page === 'skill-test'" class="utility-page narrow">
+    <h2>Online Skill Test</h2>
+    <div class="question" *ngFor="let q of [1,2,3,4,5]">
+      <h3>{{ q }}. {{ ['Indian Constitution was adopted in which year?', 'Which test measures numerical aptitude?', 'RTI Act primarily supports what?', 'Aptitude score is used for?', 'Which body conducts UPSC CSE?'][q-1] }}</h3>
+      <label *ngFor="let option of ['A','B','C','D']"><input type="radio" [name]="'q'+q" [(ngModel)]="testAnswers[q]" [value]="option"> {{ option }}</label>
+    </div>
+    <button class="find-btn" (click)="submitTest()">Submit Test</button>
+    <div *ngIf="testResult" class="notice">Score {{ testResult.score }}/{{ testResult.totalMarks }} · {{ testResult.percentage }}%</div>
+  </section>
+
+  <section *ngIf="page === 'results' || page === 'admit-cards' || page === 'notifications'" class="utility-page">
+    <h2>{{ page === 'results' ? 'Result Tracking' : page === 'admit-cards' ? 'Admit Cards' : 'Notifications' }}</h2>
+    <div class="utility-grid"><article *ngFor="let job of jobs.slice(0, 6)"><h3>{{ job.title }}</h3><p>{{ job.state }} · {{ job.applicationDeadline | date:'mediumDate' }}</p><p>{{ page === 'results' ? 'Result status: merit list under review.' : page === 'admit-cards' ? 'Admit card window opens before the exam.' : 'Latest update from Sarkari source.' }}</p></article></div>
+  </section>
+
+  <section *ngIf="page === 'resume'" class="utility-page detail-two">
+    <div><h2>Resume Builder</h2><textarea [(ngModel)]="resume.headline"></textarea><textarea [(ngModel)]="resume.education"></textarea><textarea [(ngModel)]="resume.skills"></textarea><textarea [(ngModel)]="resume.experience"></textarea></div>
+    <article class="resume-preview"><h2>{{ user?.firstName || 'Candidate' }} {{ user?.lastName || 'Profile' }}</h2><p>{{ resume.headline }}</p><h3>Education</h3><p>{{ resume.education }}</p><h3>Skills</h3><p>{{ resume.skills }}</p><h3>Experience</h3><p>{{ resume.experience }}</p></article>
+  </section>
+
+  <section *ngIf="page === 'connections'" class="utility-page">
+    <h2>Connection Requests</h2><button class="find-btn" (click)="requestConnection()">Request HR Guidance</button>
+    <div class="utility-grid"><article *ngFor="let c of connections"><h3>{{ c.hrName || c.userName }}</h3><p>{{ c.status }} · {{ c.requestMessage }}</p></article></div>
+  </section>
+
+  <section *ngIf="page === 'chat'" class="utility-page narrow">
+    <h2>Real-time HR Chat</h2>
+    <div class="chat-box"><div class="message" *ngFor="let msg of messages" [class.mine]="msg.senderId === user?.id"><b>{{ msg.senderName }}</b><p>{{ msg.message }}</p></div><div class="chat-input"><input [(ngModel)]="chatText" placeholder="Message HR recruiter..." (keyup.enter)="sendMessage()"><button class="find-btn" (click)="sendMessage()">Send</button></div></div>
+  </section>
+</main>
